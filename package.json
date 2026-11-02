@@ -1,0 +1,21 @@
+{
+  "name": "deeprossv2",
+  "version": "1.0.0",
+  "description": "Rewrite of DeepRoss Delphi application",
+  "keywords": [
+    "chess",
+    "deep",
+    "ross",
+    "vanilla",
+    "js",
+    "javascript"
+  ],
+  "license": "ISC",
+  "author": "MarcelP",
+  "type": "commonjs",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000 --directory src",
+    "test": "test"
+  }
+}
