@@ -69,6 +69,7 @@ h1 {
     width: 100%;
     aspect-ratio: 1;
     grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     overflow: hidden;
     border: 0.45rem solid #34463e;
     border-radius: 0.4rem;
@@ -78,10 +79,45 @@ h1 {
 .square {
     display: grid;
     place-items: center;
+    min-width: 0;
+    padding: 0;
+    border: 0;
     font-family: "Segoe UI Symbol", "Apple Symbols", serif;
     font-size: clamp(1.7rem, 9vw, 3.8rem);
     line-height: 1;
     user-select: none;
+    cursor: grab;
+    touch-action: none;
+}
+
+.square:active {
+    cursor: grabbing;
+}
+
+.square:focus-visible {
+    position: relative;
+    z-index: 1;
+    outline: 0.2rem solid #f4d35e;
+    outline-offset: -0.25rem;
+}
+
+.square--selected {
+    box-shadow: inset 0 0 0 0.25rem #f4d35e;
+}
+
+.square--dragging {
+    color: transparent;
+}
+
+.piece-drag-ghost {
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    color: #17221f;
+    font-family: "Segoe UI Symbol", "Apple Symbols", serif;
+    font-size: clamp(1.7rem, 9vw, 3.8rem);
+    line-height: 1;
 }
 
 .square--light {

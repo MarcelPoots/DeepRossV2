@@ -4,9 +4,11 @@ A browser-based, local-first chess app, planned for human-vs-computer play.
 
 ## Current status
 
-The current version is an initial UI scaffold. It displays the standard chess
-starting position, but the board is not interactive yet. Chess rules, legal
-moves, and the computer opponent have not been implemented.
+The current version displays the standard chess starting position and supports
+moving pieces by dragging or by selecting a piece and destination. Capturing an
+opposing piece is supported, but chess movement rules and legal-move validation
+have not been implemented, so pieces can be moved to any square. The computer
+opponent has not been implemented.
 
 ## Run locally
 
@@ -24,7 +26,8 @@ server with Ctrl+C.
 
 - `src/index.html` — page structure and app title
 - `src/styles.css` — responsive page and chessboard styling
-- `src/main.js` — renders the starting board
+- `src/main.js` — manages board state, rendering, and click/keyboard selection
+- `src/drag-and-drop.js` — handles pointer-based piece dragging
 
 ## Planned direction
 

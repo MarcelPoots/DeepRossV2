@@ -17,10 +17,12 @@
 
         <section class="game" aria-labelledby="board-heading">
             <h2 id="board-heading" class="visually-hidden">Chessboard</h2>
-            <div id="chessboard" class="chessboard" role="img" aria-label="Chessboard in the starting position"></div>
-            <p class="board-note">Starting position</p>
+            <div id="chessboard" class="chessboard" role="group" aria-label="Chessboard"></div>
+            <p id="board-note" class="board-note" role="status" aria-live="polite">
+                Drag a piece to move it, or select a piece and a destination. Legal chess moves are not checked yet.
+            </p>
         </section>
     </main>
-    <script src="./main.js" defer></script>
+    <script src="./main.js" type="module"></script>
 </body>
 </html>
