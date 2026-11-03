@@ -1,6 +1,7 @@
 import { enablePieceDragAndDrop } from "./drag-and-drop.js";
 import {
     applyMove,
+    chooseRandomLegalMove,
     createGame,
     generateLegalMoves,
     getGameFen,
@@ -41,11 +42,14 @@ const boardNote = document.querySelector("#board-note");
 const resetButton = document.querySelector("#reset-game");
 const copyFenButton = document.querySelector("#copy-fen");
 const fenDisplay = document.querySelector("#current-fen");
+const sideChoiceInputs = document.querySelectorAll('input[name="human-side"]');
 const promotionDialog = document.querySelector("#promotion-dialog");
 const promotionChoices = document.querySelector("#promotion-choices");
 let game = createGame();
 let selectedSquare = null;
 let pendingPromotion = null;
+let humanSide = "w";
+let computerMoveTimeout = null;
 
 function squareName(index) {
     const row = Math.floor(index / 8);
@@ -137,13 +141,19 @@ function setStatus(message) {
 }
 
 function resetGame() {
+    window.clearTimeout(computerMoveTimeout);
+    pendingPromotion = null;
+    if (promotionDialog.open) {
+        promotionDialog.close();
+    }
     game = createGame();
     selectedSquare = null;
     renderBoard();
     setStatus("Game reset. All pieces are back in their starting positions.");
+    scheduleComputerMove();
 }
 
-function movePiece(from, to, promotion = null) {
+function finishMove(from, to, promotion = null) {
     const candidates = generateLegalMoves(game).filter(
         (move) => move.from === from && move.to === to,
     );
@@ -196,15 +206,65 @@ function movePiece(from, to, promotion = null) {
     return true;
 }
 
+function movePiece(from, to, promotion = null) {
+    if (game.sideToMove !== humanSide) {
+        setStatus("Wait for the computer to move.");
+        return false;
+    }
+
+    if (finishMove(from, to, promotion)) {
+        scheduleComputerMove();
+        return true;
+    }
+    return false;
+}
+
+function scheduleComputerMove() {
+    window.clearTimeout(computerMoveTimeout);
+    if (game.sideToMove === humanSide) {
+        return;
+    }
+
+    setStatus("Computer is choosing a move...");
+    computerMoveTimeout = window.setTimeout(() => {
+        if (game.sideToMove === humanSide) {
+            return;
+        }
+
+        const move = chooseRandomLegalMove(game);
+        if (!move) {
+            setStatus("The game is over; the computer has no legal moves.");
+            return;
+        }
+
+        finishMove(move.from, move.to, move.promotion);
+    }, 350);
+}
+
+function startNewGame(side) {
+    humanSide = side;
+    resetGame();
+}
+
 function selectSquare(index) {
+    if (game.sideToMove !== humanSide) {
+        return;
+    }
+
     const piece = getPieceAt(game, index);
 
     if (selectedSquare === null || selectedSquare === index) {
-        selectedSquare = selectedSquare === index ? null : piece ? index : null;
+        selectedSquare = selectedSquare === index
+            ? null
+            : piece && whitePieces.has(piece) === (humanSide === "w")
+                ? index
+                : null;
         renderBoard(index);
         setStatus(
             selectedSquare === null
-                ? "Drag a piece to move it, or select a piece and a legal destination."
+                ? piece
+                    ? "Select one of your own pieces."
+                    : "Drag a piece to move it, or select a piece and a legal destination."
                 : `Selected ${describePiece(piece)} on ${squareName(index)}.`,
         );
         return;
@@ -231,6 +291,13 @@ board.addEventListener("click", (event) => {
 
 resetButton.addEventListener("click", resetGame);
 copyFenButton.addEventListener("click", copyFen);
+sideChoiceInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+        if (input.checked) {
+            startNewGame(input.value);
+        }
+    });
+});
 promotionDialog.addEventListener("close", () => {
     if (pendingPromotion) {
         pendingPromotion = null;
@@ -242,6 +309,9 @@ renderBoard();
 
 enablePieceDragAndDrop(board, {
     getPieceAt(index) {
+        if (game.sideToMove !== humanSide) {
+            return "";
+        }
         return pieceSymbols[getPieceAt(game, index)] ?? "";
     },
     movePiece,
@@ -251,3 +321,5 @@ enablePieceDragAndDrop(board, {
     renderBoard,
     setStatus,
 });
+
+scheduleComputerMove();

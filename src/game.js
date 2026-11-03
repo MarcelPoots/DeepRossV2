@@ -356,6 +356,19 @@ export function generateLegalMoves(game) {
     });
 }
 
+export function chooseRandomLegalMove(game, random = Math.random) {
+    const legalMoves = generateLegalMoves(game);
+    if (legalMoves.length === 0) {
+        return null;
+    }
+
+    const randomValue = random();
+    if (!Number.isFinite(randomValue) || randomValue < 0 || randomValue >= 1) {
+        throw new RangeError("Random source must return a number in [0, 1).");
+    }
+    return legalMoves[Math.floor(randomValue * legalMoves.length)];
+}
+
 export function applyMove(game, from, to, promotion = null) {
     if (
         !Number.isInteger(from) || from < 0 || from >= 64

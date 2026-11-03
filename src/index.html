@@ -28,6 +28,23 @@
             <h2 id="board-heading" class="visually-hidden">Chessboard</h2>
             <div class="game-controls">
                 <button id="reset-game" class="reset-button" type="button">Reset</button>
+                <fieldset class="side-choice">
+                    <legend>Who starts?</legend>
+                    <label>
+                        <input type="radio" name="human-side" value="w" checked>
+                        You start
+                    </label>
+                    <label>
+                        <input type="radio" name="human-side" value="b">
+                        Computer starts
+                    </label>
+                </fieldset>
+                <label class="difficulty-choice" for="difficulty">
+                    Difficulty
+                    <select id="difficulty">
+                        <option value="random">Random moves</option>
+                    </select>
+                </label>
             </div>
             <div id="chessboard" class="chessboard" role="group" aria-label="Chessboard"></div>
             <p id="board-note" class="board-note" role="status" aria-live="polite">

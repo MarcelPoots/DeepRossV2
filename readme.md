@@ -12,7 +12,8 @@ and king safety. Castling, en passant, and all four promotion choices are
 implemented. File labels A–H and rank labels 1–8 are shown on the board. Use
 the Reset button to restore the original piece positions. The current position
 is displayed as FEN and can be copied to the clipboard. The computer opponent
-has not been implemented.
+plays random legal moves at the “Random moves” difficulty. Choose whether you
+or the computer starts using the controls next to the board.
 
 ## Run locally
 

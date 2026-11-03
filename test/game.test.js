@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
     applyMove,
+    chooseRandomLegalMove,
     createGame,
     generateLegalMoves,
     getGameFen,
@@ -66,6 +67,24 @@ test("resetting by creating a new game leaves the old game unchanged", () => {
 
 test("generates 20 legal moves from the starting position", () => {
     assert.equal(generateLegalMoves(createGame()).length, 20);
+});
+
+test("chooses a random move from the legal moves without changing game state", () => {
+    const game = createGame();
+    const initialFen = getGameFen(game);
+    const legalMoves = generateLegalMoves(game);
+    const firstMove = chooseRandomLegalMove(game, () => 0);
+    const lastMove = chooseRandomLegalMove(game, () => 0.999999);
+
+    assert.deepEqual(firstMove, legalMoves[0]);
+    assert.deepEqual(lastMove, legalMoves.at(-1));
+    assert.equal(getGameFen(game), initialFen);
+});
+
+test("returns no random move when a side has no legal moves", () => {
+    const checkmate = createGame("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1");
+
+    assert.equal(chooseRandomLegalMove(checkmate), null);
 });
 
 test("matches starting-position perft counts through depth 3", () => {
