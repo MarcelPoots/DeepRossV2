@@ -1,4 +1,5 @@
 import { enablePieceDragAndDrop } from "./drag-and-drop.js";
+import { serializeFen } from "./fen.js";
 
 const startingPosition = [
     ["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"],
@@ -64,38 +65,16 @@ function describePiece(piece) {
 }
 
 function getFen() {
-    const piecePlacement = position.map((rank) => {
-        let emptyCount = 0;
-        let fenRank = "";
-
-        rank.forEach((piece) => {
-            if (!piece) {
-                emptyCount += 1;
-                return;
-            }
-
-            if (emptyCount > 0) {
-                fenRank += String(emptyCount);
-                emptyCount = 0;
-            }
-
-            fenRank += fenPieceLetters[piece];
-        });
-
-        return fenRank + (emptyCount > 0 ? String(emptyCount) : "");
-    }).join("/");
-    const fenCastlingRights = ["K", "Q", "k", "q"].filter((right) =>
-        castlingRights.has(right),
-    ).join("") || "-";
-
-    return [
-        piecePlacement,
+    return serializeFen({
+        board: position.map((rank) => rank.map((piece) => fenPieceLetters[piece] ?? "")),
         sideToMove,
-        fenCastlingRights,
-        enPassantTarget ?? "-",
+        castlingRights: ["K", "Q", "k", "q"].filter((right) =>
+            castlingRights.has(right),
+        ).join("") || "-",
+        enPassantTarget,
         halfmoveClock,
         fullmoveNumber,
-    ].join(" ");
+    });
 }
 
 function updateFenDisplay() {

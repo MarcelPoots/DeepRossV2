@@ -33,7 +33,17 @@ server with Ctrl+C.
 - `src/index.html` — page structure and app title
 - `src/styles.css` — responsive page and chessboard styling
 - `src/main.js` — manages board state, rendering, and click/keyboard selection
+- `src/fen.js` — parses and serializes Forsyth–Edwards Notation positions
 - `src/drag-and-drop.js` — handles pointer-based piece dragging
+- `test/fen.test.js` — FEN parsing and serialization tests
+
+## Run tests
+
+Run the chess-logic unit tests with Node.js:
+
+```sh
+npm test
+```
 
 ## Planned direction
 

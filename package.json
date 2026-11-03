@@ -12,10 +12,10 @@
   ],
   "license": "ISC",
   "author": "MarcelP",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.html",
   "scripts": {
     "start": "python3 -m http.server 8000 --directory src",
-    "test": "test"
+    "test": "node --test"
   }
 }
