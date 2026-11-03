@@ -7,13 +7,11 @@ A browser-based, local-first chess app, planned for human-vs-computer play.
 
 The current version displays the standard chess starting position and supports
 moving pieces by dragging or by selecting a piece and destination. Capturing an
-opposing piece is supported, but chess movement rules and legal-move validation
-have not been implemented, so pieces can be moved to any square. File labels
-A–H and rank labels 1–8 are shown on the board. Use the Reset button to restore
-the original piece positions. The current position is displayed as FEN; its
-board layout and tracked move metadata update as pieces move. Because legal
-moves are not validated, this FEN reflects the app's current board and move
-actions rather than a guaranteed legal chess position. The computer opponent
+opposing piece is supported, with legal moves checked against piece movement
+and king safety. Castling, en passant, and all four promotion choices are
+implemented. File labels A–H and rank labels 1–8 are shown on the board. Use
+the Reset button to restore the original piece positions. The current position
+is displayed as FEN and can be copied to the clipboard. The computer opponent
 has not been implemented.
 
 ## Run locally
@@ -34,7 +32,8 @@ server with Ctrl+C.
 - `src/styles.css` — responsive page and chessboard styling
 - `src/main.js` — renders the board and handles UI interaction
 - `src/fen.js` — parses and serializes Forsyth–Edwards Notation positions
-- `src/game.js` — UI-independent game state, move application, and FEN access
+- `src/game.js` — UI-independent game state, legal move generation, move
+  application, and FEN access
 - `src/drag-and-drop.js` — handles pointer-based piece dragging
 - `test/fen.test.js` — FEN parsing and serialization tests
 - `test/game.test.js` — game state and move application tests

@@ -136,6 +136,65 @@ h1 {
     outline-offset: 0.15rem;
 }
 
+.promotion-dialog {
+    min-width: 16rem;
+    padding: 1.25rem;
+    border: 1px solid #718b73;
+    border-radius: 0.5rem;
+    background: #17221f;
+    color: #f2f0e8;
+}
+
+.promotion-dialog::backdrop {
+    background: #0009;
+}
+
+.promotion-dialog p {
+    margin: 0 0 1rem;
+    text-align: center;
+}
+
+.promotion-choices {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.promotion-choice,
+.promotion-cancel {
+    border: 1px solid #718b73;
+    border-radius: 0.3rem;
+    background: #34463e;
+    color: #f2f0e8;
+    cursor: pointer;
+}
+
+.promotion-choice {
+    width: 3rem;
+    height: 3rem;
+    font-family: "Segoe UI Symbol", "Apple Symbols", serif;
+    font-size: 2rem;
+}
+
+.promotion-cancel {
+    display: block;
+    margin: 0 auto;
+    padding: 0.4rem 0.8rem;
+    font: inherit;
+}
+
+.promotion-choice:hover,
+.promotion-cancel:hover {
+    background: #455d50;
+}
+
+.promotion-choice:focus-visible,
+.promotion-cancel:focus-visible {
+    outline: 0.15rem solid #f4d35e;
+    outline-offset: 0.1rem;
+}
+
 .visually-hidden {
     position: absolute;
     width: 1px;

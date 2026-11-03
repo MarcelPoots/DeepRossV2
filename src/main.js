@@ -1,5 +1,11 @@
 import { enablePieceDragAndDrop } from "./drag-and-drop.js";
-import { applyMove, createGame, getGameFen, getPieceAt } from "./game.js";
+import {
+    applyMove,
+    createGame,
+    generateLegalMoves,
+    getGameFen,
+    getPieceAt,
+} from "./game.js";
 
 const pieceNames = {
     K: "king",
@@ -35,8 +41,11 @@ const boardNote = document.querySelector("#board-note");
 const resetButton = document.querySelector("#reset-game");
 const copyFenButton = document.querySelector("#copy-fen");
 const fenDisplay = document.querySelector("#current-fen");
+const promotionDialog = document.querySelector("#promotion-dialog");
+const promotionChoices = document.querySelector("#promotion-choices");
 let game = createGame();
 let selectedSquare = null;
+let pendingPromotion = null;
 
 function squareName(index) {
     const row = Math.floor(index / 8);
@@ -134,20 +143,56 @@ function resetGame() {
     setStatus("Game reset. All pieces are back in their starting positions.");
 }
 
-function movePiece(from, to) {
-    const result = applyMove(game, from, to);
-    if (!result.moved) {
-        if (result.reason === "own-piece") {
-            setStatus("You cannot capture your own piece.");
+function movePiece(from, to, promotion = null) {
+    const candidates = generateLegalMoves(game).filter(
+        (move) => move.from === from && move.to === to,
+    );
+    if (candidates.length === 0) {
+        setStatus("That is not a legal move.");
+        return false;
+    }
+
+    const promotionMoves = candidates.filter((move) => move.promotion);
+    if (promotionMoves.length > 0 && promotion === null) {
+        pendingPromotion = { from, to };
+        promotionChoices.replaceChildren();
+        for (const move of promotionMoves) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "promotion-choice";
+            button.textContent = pieceSymbols[move.promotion];
+            button.setAttribute(
+                "aria-label",
+                `Promote to ${pieceNames[move.promotion]}`,
+            );
+            button.addEventListener("click", () => {
+                const pending = pendingPromotion;
+                pendingPromotion = null;
+                promotionDialog.close();
+                if (pending) {
+                    movePiece(pending.from, pending.to, move.promotion);
+                }
+            });
+            promotionChoices.append(button);
         }
+        promotionDialog.showModal();
+        setStatus("Choose a piece for promotion.");
+        return false;
+    }
+
+    const result = applyMove(game, from, to, promotion);
+    if (!result.moved) {
+        setStatus(result.reason === "own-piece"
+            ? "You cannot capture your own piece."
+            : "That is not a legal move.");
         return false;
     }
 
     selectedSquare = null;
     renderBoard(to);
-    setStatus(
-        `Moved ${describePiece(result.piece)} from ${squareName(from)} to ${squareName(to)}.`,
-    );
+    setStatus(result.promotion
+        ? `Promoted pawn to ${pieceNames[result.promotion]}.`
+        : `Moved ${describePiece(result.piece)} from ${squareName(from)} to ${squareName(to)}.`);
     return true;
 }
 
@@ -159,7 +204,7 @@ function selectSquare(index) {
         renderBoard(index);
         setStatus(
             selectedSquare === null
-                ? "Drag a piece to move it, or select a piece and a destination."
+                ? "Drag a piece to move it, or select a piece and a legal destination."
                 : `Selected ${describePiece(piece)} on ${squareName(index)}.`,
         );
         return;
@@ -186,6 +231,12 @@ board.addEventListener("click", (event) => {
 
 resetButton.addEventListener("click", resetGame);
 copyFenButton.addEventListener("click", copyFen);
+promotionDialog.addEventListener("close", () => {
+    if (pendingPromotion) {
+        pendingPromotion = null;
+        setStatus("Promotion cancelled.");
+    }
+});
 
 renderBoard();
 

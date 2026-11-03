@@ -31,10 +31,17 @@
             </div>
             <div id="chessboard" class="chessboard" role="group" aria-label="Chessboard"></div>
             <p id="board-note" class="board-note" role="status" aria-live="polite">
-                Drag a piece to move it, or select a piece and a destination. Legal chess moves are not checked yet.
+                Drag a piece to move it, or select a piece and a legal destination.
             </p>
         </section>
     </main>
+    <dialog id="promotion-dialog" class="promotion-dialog" aria-labelledby="promotion-heading">
+        <form method="dialog">
+            <p id="promotion-heading">Choose a promotion piece</p>
+            <div id="promotion-choices" class="promotion-choices"></div>
+            <button class="promotion-cancel" value="cancel">Cancel</button>
+        </form>
+    </dialog>
     <script src="./main.js" type="module"></script>
 </body>
 </html>
