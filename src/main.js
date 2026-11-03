@@ -1,58 +1,42 @@
 import { enablePieceDragAndDrop } from "./drag-and-drop.js";
-import { serializeFen } from "./fen.js";
-
-const startingPosition = [
-    ["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"],
-    ["♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"],
-    ["♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"],
-];
-let position = startingPosition.map((rank) => [...rank]);
+import { applyMove, createGame, getGameFen, getPieceAt } from "./game.js";
 
 const pieceNames = {
-    "♔": "king",
-    "♕": "queen",
-    "♖": "rook",
-    "♗": "bishop",
-    "♘": "knight",
-    "♙": "pawn",
-    "♚": "king",
-    "♛": "queen",
-    "♜": "rook",
-    "♝": "bishop",
-    "♞": "knight",
-    "♟": "pawn",
+    K: "king",
+    Q: "queen",
+    R: "rook",
+    B: "bishop",
+    N: "knight",
+    P: "pawn",
+    k: "king",
+    q: "queen",
+    r: "rook",
+    b: "bishop",
+    n: "knight",
+    p: "pawn",
 };
-const fenPieceLetters = {
-    "♔": "K",
-    "♕": "Q",
-    "♖": "R",
-    "♗": "B",
-    "♘": "N",
-    "♙": "P",
-    "♚": "k",
-    "♛": "q",
-    "♜": "r",
-    "♝": "b",
-    "♞": "n",
-    "♟": "p",
+const pieceSymbols = {
+    K: "♔",
+    Q: "♕",
+    R: "♖",
+    B: "♗",
+    N: "♘",
+    P: "♙",
+    k: "♚",
+    q: "♛",
+    r: "♜",
+    b: "♝",
+    n: "♞",
+    p: "♟",
 };
-const whitePieces = new Set(["♔", "♕", "♖", "♗", "♘", "♙"]);
+const whitePieces = new Set(["K", "Q", "R", "B", "N", "P"]);
 const board = document.querySelector("#chessboard");
 const boardNote = document.querySelector("#board-note");
 const resetButton = document.querySelector("#reset-game");
 const copyFenButton = document.querySelector("#copy-fen");
 const fenDisplay = document.querySelector("#current-fen");
+let game = createGame();
 let selectedSquare = null;
-let sideToMove = "w";
-let castlingRights = new Set(["K", "Q", "k", "q"]);
-let enPassantTarget = null;
-let halfmoveClock = 0;
-let fullmoveNumber = 1;
 
 function squareName(index) {
     const row = Math.floor(index / 8);
@@ -65,16 +49,7 @@ function describePiece(piece) {
 }
 
 function getFen() {
-    return serializeFen({
-        board: position.map((rank) => rank.map((piece) => fenPieceLetters[piece] ?? "")),
-        sideToMove,
-        castlingRights: ["K", "Q", "k", "q"].filter((right) =>
-            castlingRights.has(right),
-        ).join("") || "-",
-        enPassantTarget,
-        halfmoveClock,
-        fullmoveNumber,
-    });
+    return getGameFen(game);
 }
 
 function updateFenDisplay() {
@@ -95,23 +70,10 @@ async function copyFen() {
     }
 }
 
-function removeCastlingRightsForRook(square) {
-    const rookRightsBySquare = {
-        0: "q",
-        7: "k",
-        56: "Q",
-        63: "K",
-    };
-    const right = rookRightsBySquare[square];
-    if (right) {
-        castlingRights.delete(right);
-    }
-}
-
 function renderBoard(focusIndex = null) {
     const squares = document.createDocumentFragment();
 
-    position.forEach((rank, row) => {
+    game.board.forEach((rank, row) => {
         rank.forEach((piece, column) => {
             const index = row * 8 + column;
             const square = document.createElement("button");
@@ -120,7 +82,7 @@ function renderBoard(focusIndex = null) {
             square.type = "button";
             square.className = `square ${isLightSquare ? "square--light" : "square--dark"}`;
             square.dataset.square = String(index);
-            square.textContent = piece;
+            square.textContent = pieceSymbols[piece] ?? "";
             square.setAttribute(
                 "aria-label",
                 `${squareName(index)}${piece ? `, ${describePiece(piece)}` : ", empty"}`,
@@ -166,78 +128,31 @@ function setStatus(message) {
 }
 
 function resetGame() {
-    position = startingPosition.map((rank) => [...rank]);
+    game = createGame();
     selectedSquare = null;
-    sideToMove = "w";
-    castlingRights = new Set(["K", "Q", "k", "q"]);
-    enPassantTarget = null;
-    halfmoveClock = 0;
-    fullmoveNumber = 1;
     renderBoard();
     setStatus("Game reset. All pieces are back in their starting positions.");
 }
 
 function movePiece(from, to) {
-    if (from === to) {
+    const result = applyMove(game, from, to);
+    if (!result.moved) {
+        if (result.reason === "own-piece") {
+            setStatus("You cannot capture your own piece.");
+        }
         return false;
     }
 
-    const fromRow = Math.floor(from / 8);
-    const fromColumn = from % 8;
-    const toRow = Math.floor(to / 8);
-    const toColumn = to % 8;
-    const movingPiece = position[fromRow][fromColumn];
-    const targetPiece = position[toRow][toColumn];
-
-    if (!movingPiece) {
-        return false;
-    }
-
-    if (targetPiece && whitePieces.has(movingPiece) === whitePieces.has(targetPiece)) {
-        setStatus("You cannot capture your own piece.");
-        return false;
-    }
-
-    const isPawnMove = movingPiece === "♙" || movingPiece === "♟";
-    if (movingPiece === "♔") {
-        castlingRights.delete("K");
-        castlingRights.delete("Q");
-    } else if (movingPiece === "♚") {
-        castlingRights.delete("k");
-        castlingRights.delete("q");
-    } else if (movingPiece === "♖" || movingPiece === "♜") {
-        removeCastlingRightsForRook(from);
-    }
-
-    if (targetPiece === "♖" || targetPiece === "♜") {
-        removeCastlingRightsForRook(to);
-    }
-
-    enPassantTarget = isPawnMove && fromColumn === toColumn && Math.abs(fromRow - toRow) === 2
-        ? squareName((from + to) / 2)
-        : null;
-    halfmoveClock = isPawnMove || targetPiece ? 0 : halfmoveClock + 1;
-    if (!whitePieces.has(movingPiece)) {
-        fullmoveNumber += 1;
-        sideToMove = "w";
-    } else {
-        sideToMove = "b";
-    }
-
-    position[toRow][toColumn] = movingPiece;
-    position[fromRow][fromColumn] = "";
     selectedSquare = null;
     renderBoard(to);
     setStatus(
-        `Moved ${describePiece(movingPiece)} from ${squareName(from)} to ${squareName(to)}.`,
+        `Moved ${describePiece(result.piece)} from ${squareName(from)} to ${squareName(to)}.`,
     );
     return true;
 }
 
 function selectSquare(index) {
-    const row = Math.floor(index / 8);
-    const column = index % 8;
-    const piece = position[row][column];
+    const piece = getPieceAt(game, index);
 
     if (selectedSquare === null || selectedSquare === index) {
         selectedSquare = selectedSquare === index ? null : piece ? index : null;
@@ -250,9 +165,7 @@ function selectSquare(index) {
         return;
     }
 
-    const selectedRow = Math.floor(selectedSquare / 8);
-    const selectedColumn = selectedSquare % 8;
-    const selectedPiece = position[selectedRow][selectedColumn];
+    const selectedPiece = getPieceAt(game, selectedSquare);
 
     if (piece && whitePieces.has(piece) === whitePieces.has(selectedPiece)) {
         selectedSquare = index;
@@ -278,7 +191,7 @@ renderBoard();
 
 enablePieceDragAndDrop(board, {
     getPieceAt(index) {
-        return position[Math.floor(index / 8)][index % 8];
+        return pieceSymbols[getPieceAt(game, index)] ?? "";
     },
     movePiece,
     setSelectedSquare(index) {
