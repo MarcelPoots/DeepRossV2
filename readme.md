@@ -7,8 +7,13 @@ A browser-based, local-first chess app, planned for human-vs-computer play.
 The current version displays the standard chess starting position and supports
 moving pieces by dragging or by selecting a piece and destination. Capturing an
 opposing piece is supported, but chess movement rules and legal-move validation
-have not been implemented, so pieces can be moved to any square. The computer
-opponent has not been implemented.
+have not been implemented, so pieces can be moved to any square. File labels
+A–H and rank labels 1–8 are shown on the board. Use the Reset button to restore
+the original piece positions. The current position is displayed as FEN; its
+board layout and tracked move metadata update as pieces move. Because legal
+moves are not validated, this FEN reflects the app's current board and move
+actions rather than a guaranteed legal chess position. The computer opponent
+has not been implemented.
 
 ## Run locally
 
