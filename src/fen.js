@@ -2,6 +2,7 @@ const PIECES = new Set(["K", "Q", "R", "B", "N", "P", "k", "q", "r", "b", "n", "
 const CASTLING_RIGHTS = new Set(["K", "Q", "k", "q"]);
 
 function assertGameState(state) {
+    // Validate every FEN field before serialization so malformed game state is never emitted.
     if (!state || !Array.isArray(state.board) || state.board.length !== 8) {
         throw new TypeError("FEN board must contain exactly 8 ranks.");
     }
@@ -50,6 +51,7 @@ function assertGameState(state) {
 export function serializeFen(state) {
     assertGameState(state);
 
+    // FEN writes each consecutive run of empty squares as one digit.
     const piecePlacement = state.board.map((rank) => {
         let emptyCount = 0;
         let fenRank = "";
@@ -84,6 +86,8 @@ export function parseFen(fen) {
         throw new TypeError("FEN must be a string.");
     }
 
+    // FEN has six whitespace-separated fields; parse placement separately
+    // before validating the remaining fields as a complete game state.
     const fields = fen.trim().split(/\s+/);
     if (fields.length !== 6) {
         throw new TypeError("FEN must contain exactly 6 fields.");
@@ -96,6 +100,7 @@ export function parseFen(fen) {
     }
 
     const board = ranks.map((rankText) => {
+        // Expand empty-square counts so each board rank has one entry per square.
         const rank = [];
         for (const token of rankText) {
             if (/^[1-8]$/.test(token)) {

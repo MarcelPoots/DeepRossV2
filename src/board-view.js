@@ -46,6 +46,8 @@ export function createBoardView({ board, fenDisplay, getGame, getSelectedSquare,
         const selectedSquare = getSelectedSquare();
         const squares = document.createDocumentFragment();
 
+        // Rebuild from game state so labels, accessibility text, and selection
+        // styling stay in sync after each move.
         game.board.forEach((rank, row) => {
             rank.forEach((piece, column) => {
                 const index = row * 8 + column;

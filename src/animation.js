@@ -5,6 +5,8 @@ export function animateMove(board, from, to, updateBoard, piece) {
     const sourceRect = sourcePiece?.getBoundingClientRect();
     const destinationRect = destinationSquare?.getBoundingClientRect();
 
+    // Save the old square positions before rendering the new board so the
+    // destination piece can animate from the square it just left.
     updateBoard();
 
     if (
@@ -32,6 +34,7 @@ export function animateMove(board, from, to, updateBoard, piece) {
 
     const keyframes = [{ transform: `translate(${offsetX}px, ${offsetY}px)` }];
     if (piece?.toLowerCase() === "n") {
+        // Knights travel in an L shape, so add a waypoint at the end of the long leg.
         const sourceRow = Math.floor(from / 8);
         const sourceColumn = from % 8;
         const destinationRow = Math.floor(to / 8);

@@ -112,6 +112,9 @@ export function getGameFen(game) {
 export function isSquareAttacked(game, square, byWhite) {
     const row = Math.floor(square / 8);
     const column = square % 8;
+
+    // Pawns, knights, and kings attack at fixed offsets; sliding pieces are
+    // checked along rays below, stopping as soon as another piece blocks the ray.
     const pawn = byWhite ? "P" : "p";
     const pawnRow = row + (byWhite ? 1 : -1);
     for (const pawnColumn of [column - 1, column + 1]) {
@@ -206,6 +209,7 @@ function addPawnMoves(game, moves, from, white) {
         if (isEnemyPiece(target, white) && target.toLowerCase() !== "k") {
             addPawnMove(moves, from, to, white);
         } else if (game.enPassantTarget === squareName(to)) {
+            // The FEN target marks the landing square; the pawn being captured is beside the mover.
             const capturedPawn = game.board[row][targetColumn];
             if (capturedPawn === (white ? "p" : "P")) {
                 addPawnMove(moves, from, to, white, { enPassant: true });
@@ -222,6 +226,8 @@ function addCastlingMoves(game, moves, white) {
     const queenSide = white ? "Q" : "q";
     const base = row * 8;
 
+    // Castling needs the right, the rook, a clear path, and a king that does
+    // not start on or cross an attacked square.
     if (
         game.board[row][4] !== king
         || isSquareAttacked(game, base + 4, !white)
@@ -254,6 +260,7 @@ function generatePseudoLegalMoves(game) {
     const moves = [];
     const white = game.sideToMove === "w";
 
+    // Generate movement candidates only for the side whose turn it is.
     for (let from = 0; from < 64; from += 1) {
         const piece = getPieceAt(game, from);
         if (!piece || isWhitePiece(piece) !== white) {
@@ -301,6 +308,7 @@ function applyUnchecked(game, move) {
     const white = isWhitePiece(piece);
     const isPawn = piece.toLowerCase() === "p";
 
+    // A king/rook move or a rook capture can permanently remove castling rights.
     if (piece === "K") {
         game.castlingRights = game.castlingRights.replace(/[KQ]/g, "");
     } else if (piece === "k") {
@@ -321,6 +329,7 @@ function applyUnchecked(game, move) {
         game.board[fromRow][toColumn] = "";
     }
 
+    // Apply the move and its special rook movement; callers provide a legal move.
     game.board[toRow][toColumn] = move.promotion ?? piece;
     game.board[fromRow][fromColumn] = "";
 
@@ -350,6 +359,7 @@ function cloneGame(game) {
 export function generateLegalMoves(game) {
     const white = game.sideToMove === "w";
     return generatePseudoLegalMoves(game).filter((move) => {
+        // Test each candidate on a copy so illegal moves never change the live game.
         const candidate = cloneGame(game);
         applyUnchecked(candidate, move);
         return !isKingInCheck(candidate, white);
@@ -393,6 +403,7 @@ export function applyMove(game, from, to, promotion = null) {
         return { moved: false, reason: "own-piece" };
     }
 
+    // Match the requested squares against legal moves before changing game state.
     const candidateMoves = generateLegalMoves(game).filter(
         (move) => move.from === from && move.to === to,
     );
@@ -403,6 +414,7 @@ export function applyMove(game, from, to, promotion = null) {
     if (promotion && !candidateMoves.some((candidate) => candidate.promotion === promotion)) {
         return { moved: false, reason: "illegal-promotion" };
     }
+    // If no promotion was chosen, use the standard default: a queen.
     const move = candidateMoves.find((candidate) => candidate.promotion === promotion)
         ?? candidateMoves.find((candidate) => candidate.promotion === (game.sideToMove === "w" ? "Q" : "q"))
         ?? candidateMoves[0];
@@ -419,6 +431,7 @@ export function perft(game, depth) {
         return 1;
     }
 
+    // Count reachable positions by recursively playing each move on its own copy.
     let nodes = 0;
     for (const move of generateLegalMoves(game)) {
         const child = cloneGame(game);

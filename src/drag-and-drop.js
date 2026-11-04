@@ -15,6 +15,7 @@ export function enablePieceDragAndDrop(board, { getPieceAt, movePiece, setSelect
             return;
         }
 
+        // Ignore tiny pointer motion so a normal click is not mistaken for a drag.
         if (!drag.active && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5) {
             drag.active = true;
             setSelectedSquare(drag.from);
@@ -76,6 +77,8 @@ export function enablePieceDragAndDrop(board, { getPieceAt, movePiece, setSelect
         const from = drag.from;
         const to = destination && board.contains(destination) ? Number(destination.dataset.square) : null;
 
+        // Clear drag visuals before rerendering, and consume the generated click
+        // so the same gesture cannot also select a square.
         clearDrag();
         suppressClick = true;
         window.setTimeout(() => {

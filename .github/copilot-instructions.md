@@ -38,3 +38,12 @@ in this workspace; do not assume they are available.
    known legal-move counts where applicable.
 4. Run the smallest relevant checks after changes and report anything that
    could not be verified.
+
+## Code comments
+
+- When adding or changing JavaScript, include brief comments for non-trivial
+  functions and methods so a junior developer can follow their purpose and
+  important reasoning, especially chess rules and edge cases.
+- Explain why a step or condition is needed rather than paraphrasing the code.
+  Leave simple, self-explanatory functions uncommented, and update comments
+  whenever the behavior they describe changes.

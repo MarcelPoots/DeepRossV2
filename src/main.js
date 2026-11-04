@@ -88,6 +88,7 @@ function loadFen(fen) {
         return;
     }
 
+    // Replace the current game only after parsing succeeds, preserving it on invalid input.
     window.clearTimeout(computerMoveTimeout);
     pendingPromotion = null;
     if (promotionDialog.open) {
@@ -112,6 +113,7 @@ function finishMove(from, to, promotion = null) {
 
     const promotionMoves = candidates.filter((move) => move.promotion);
     if (promotionMoves.length > 0 && promotion === null) {
+        // Pause the move until the player chooses which piece the pawn becomes.
         pendingPromotion = { from, to };
         promotionChoices.replaceChildren();
         for (const move of promotionMoves) {
@@ -175,6 +177,7 @@ function scheduleComputerMove() {
 
     setStatus("Computer is choosing a move...");
     computerMoveTimeout = window.setTimeout(() => {
+        // The game may have been reset or loaded while the computer was waiting.
         if (game.sideToMove === humanSide) {
             return;
         }
@@ -201,6 +204,7 @@ function selectSquare(index) {
 
     const piece = getPieceAt(game, index);
 
+    // A second click changes the selection to another friendly piece or attempts a move.
     if (selectedSquare === null || selectedSquare === index) {
         selectedSquare = selectedSquare === index
             ? null
