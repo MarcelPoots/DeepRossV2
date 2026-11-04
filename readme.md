@@ -1,5 +1,5 @@
 # Deep Ross V2
-![Deep Ross V2](./documentation/deeprosv2.png)
+![Deep Ross V2](./documentation/DeepRossv2.png)
 
 A browser-based, local-first chess app, for human-vs-computer play.
 
