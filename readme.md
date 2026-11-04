@@ -33,12 +33,12 @@ server with Ctrl+C.
 - `src/index.html` — page structure and app title
 - `src/styles.css` — responsive page and chessboard styling
 - `src/main.js` — coordinates game flow and handles UI interaction
-- `src/board-view.js` — renders the chessboard and FEN display
+- `src/components/chess-board.js` — `<chess-board>` web component that renders
+  the board and handles square selection and piece dragging
 - `src/animation.js` — animates pieces between squares for player and computer moves
 - `src/fen.js` — parses and serializes Forsyth–Edwards Notation positions
 - `src/game.js` — UI-independent game state, legal move generation, move
   application, and FEN access
-- `src/drag-and-drop.js` — handles pointer-based piece dragging
 - `test/fen.test.js` — FEN parsing and serialization tests
 - `test/game.test.js` — game state and move application tests
 

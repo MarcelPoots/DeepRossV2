@@ -1,12 +1,10 @@
-import { enablePieceDragAndDrop } from "./drag-and-drop.js";
 import { animateMove } from "./animation.js";
 import {
-    createBoardView,
     describePiece,
     pieceNames,
     pieceSymbols,
     squareName,
-} from "./board-view.js";
+} from "./components/chess-board.js";
 import {
     applyMove,
     chooseRandomLegalMove,
@@ -40,13 +38,15 @@ function getFen() {
     return getGameFen(game);
 }
 
-const { renderBoard } = createBoardView({
-    board,
-    fenDisplay,
-    getGame: () => game,
-    getSelectedSquare: () => selectedSquare,
-    getFen,
-});
+function renderBoard(focusIndex = null) {
+    board.position = game.board;
+    board.selectedSquare = selectedSquare;
+    board.interactionEnabled = game.sideToMove === humanSide;
+    fenDisplay.textContent = getFen();
+    if (focusIndex !== null) {
+        board.render(focusIndex);
+    }
+}
 
 async function copyFen() {
     if (!navigator.clipboard?.writeText) {
@@ -234,11 +234,16 @@ function selectSquare(index) {
     movePiece(selectedSquare, index);
 }
 
-board.addEventListener("click", (event) => {
-    const square = event.target.closest("button[data-square]");
-    if (square) {
-        selectSquare(Number(square.dataset.square));
-    }
+board.addEventListener("square-select", (event) => {
+    selectSquare(event.detail.index);
+});
+board.addEventListener("piece-move", (event) => {
+    movePiece(event.detail.from, event.detail.to);
+});
+board.addEventListener("move-cancelled", () => {
+    selectedSquare = null;
+    renderBoard();
+    setStatus("Move cancelled.");
 });
 
 resetButton.addEventListener("click", resetGame);
@@ -273,20 +278,5 @@ promotionDialog.addEventListener("close", () => {
 });
 
 renderBoard();
-
-enablePieceDragAndDrop(board, {
-    getPieceAt(index) {
-        if (game.sideToMove !== humanSide) {
-            return "";
-        }
-        return pieceSymbols[getPieceAt(game, index)] ?? "";
-    },
-    movePiece,
-    setSelectedSquare(index) {
-        selectedSquare = index;
-    },
-    renderBoard,
-    setStatus,
-});
 
 scheduleComputerMove();
