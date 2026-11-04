@@ -1,4 +1,12 @@
 import { enablePieceDragAndDrop } from "./drag-and-drop.js";
+import { animateMove } from "./animation.js";
+import {
+    createBoardView,
+    describePiece,
+    pieceNames,
+    pieceSymbols,
+    squareName,
+} from "./board-view.js";
 import {
     applyMove,
     chooseRandomLegalMove,
@@ -8,66 +16,37 @@ import {
     getPieceAt,
 } from "./game.js";
 
-const pieceNames = {
-    K: "king",
-    Q: "queen",
-    R: "rook",
-    B: "bishop",
-    N: "knight",
-    P: "pawn",
-    k: "king",
-    q: "queen",
-    r: "rook",
-    b: "bishop",
-    n: "knight",
-    p: "pawn",
-};
-const pieceSymbols = {
-    K: "♔",
-    Q: "♕",
-    R: "♖",
-    B: "♗",
-    N: "♘",
-    P: "♙",
-    k: "♚",
-    q: "♛",
-    r: "♜",
-    b: "♝",
-    n: "♞",
-    p: "♟",
-};
 const whitePieces = new Set(["K", "Q", "R", "B", "N", "P"]);
 const board = document.querySelector("#chessboard");
 const boardNote = document.querySelector("#board-note");
 const resetButton = document.querySelector("#reset-game");
+const openFenDialogButton = document.querySelector("#open-fen-dialog");
 const copyFenButton = document.querySelector("#copy-fen");
 const fenDisplay = document.querySelector("#current-fen");
 const sideChoiceInputs = document.querySelectorAll('input[name="human-side"]');
 const promotionDialog = document.querySelector("#promotion-dialog");
 const promotionChoices = document.querySelector("#promotion-choices");
+const fenDialog = document.querySelector("#fen-dialog");
+const fenForm = document.querySelector("#fen-form");
+const fenInput = document.querySelector("#fen-input");
+const fenError = document.querySelector("#fen-error");
 let game = createGame();
 let selectedSquare = null;
 let pendingPromotion = null;
 let humanSide = "w";
 let computerMoveTimeout = null;
 
-function squareName(index) {
-    const row = Math.floor(index / 8);
-    const column = index % 8;
-    return `${String.fromCharCode(97 + column)}${8 - row}`;
-}
-
-function describePiece(piece) {
-    return `${whitePieces.has(piece) ? "White" : "Black"} ${pieceNames[piece]}`;
-}
-
 function getFen() {
     return getGameFen(game);
 }
 
-function updateFenDisplay() {
-    fenDisplay.textContent = getFen();
-}
+const { renderBoard } = createBoardView({
+    board,
+    fenDisplay,
+    getGame: () => game,
+    getSelectedSquare: () => selectedSquare,
+    getFen,
+});
 
 async function copyFen() {
     if (!navigator.clipboard?.writeText) {
@@ -80,59 +59,6 @@ async function copyFen() {
         setStatus("Current FEN copied to the clipboard.");
     } catch (error) {
         setStatus(`Could not copy FEN: ${error.message}`);
-    }
-}
-
-function renderBoard(focusIndex = null) {
-    const squares = document.createDocumentFragment();
-
-    game.board.forEach((rank, row) => {
-        rank.forEach((piece, column) => {
-            const index = row * 8 + column;
-            const square = document.createElement("button");
-            const isLightSquare = (row + column) % 2 === 0;
-
-            square.type = "button";
-            square.className = `square ${isLightSquare ? "square--light" : "square--dark"}`;
-            square.dataset.square = String(index);
-            square.textContent = pieceSymbols[piece] ?? "";
-            square.setAttribute(
-                "aria-label",
-                `${squareName(index)}${piece ? `, ${describePiece(piece)}` : ", empty"}`,
-            );
-            square.setAttribute("aria-pressed", String(selectedSquare === index));
-
-            if (column === 0) {
-                const rankLabel = document.createElement("span");
-                rankLabel.className = "square-coordinate square-coordinate--rank";
-                if (row === 7) {
-                    rankLabel.classList.add("square-coordinate--rank-bottom");
-                }
-                rankLabel.textContent = String(8 - row);
-                rankLabel.setAttribute("aria-hidden", "true");
-                square.append(rankLabel);
-            }
-
-            if (row === 7) {
-                const fileLabel = document.createElement("span");
-                fileLabel.className = "square-coordinate square-coordinate--file";
-                fileLabel.textContent = String.fromCharCode(65 + column);
-                fileLabel.setAttribute("aria-hidden", "true");
-                square.append(fileLabel);
-            }
-
-            if (selectedSquare === index) {
-                square.classList.add("square--selected");
-            }
-
-            squares.append(square);
-        });
-    });
-
-    board.replaceChildren(squares);
-    updateFenDisplay();
-    if (focusIndex !== null) {
-        board.querySelector(`[data-square="${focusIndex}"]`)?.focus({ preventScroll: true });
     }
 }
 
@@ -151,6 +77,28 @@ function resetGame() {
     renderBoard();
     setStatus("Game reset. All pieces are back in their starting positions.");
     scheduleComputerMove();
+}
+
+function loadFen(fen) {
+    let loadedGame;
+    try {
+        loadedGame = createGame(fen);
+    } catch (error) {
+        fenError.textContent = `Invalid FEN: ${error.message}`;
+        return;
+    }
+
+    window.clearTimeout(computerMoveTimeout);
+    pendingPromotion = null;
+    if (promotionDialog.open) {
+        promotionDialog.close();
+    }
+    game = loadedGame;
+    selectedSquare = null;
+    fenError.textContent = "";
+    fenDialog.close();
+    renderBoard();
+    setStatus("Position loaded from FEN.");
 }
 
 function finishMove(from, to, promotion = null) {
@@ -199,7 +147,7 @@ function finishMove(from, to, promotion = null) {
     }
 
     selectedSquare = null;
-    renderBoard(to);
+    animateMove(board, from, to, () => renderBoard(to), result.piece);
     setStatus(result.promotion
         ? `Promoted pawn to ${pieceNames[result.promotion]}.`
         : `Moved ${describePiece(result.piece)} from ${squareName(from)} to ${squareName(to)}.`);
@@ -290,6 +238,21 @@ board.addEventListener("click", (event) => {
 });
 
 resetButton.addEventListener("click", resetGame);
+openFenDialogButton.addEventListener("click", () => {
+    window.clearTimeout(computerMoveTimeout);
+    fenError.textContent = "";
+    fenInput.value = getFen();
+    fenDialog.showModal();
+    fenInput.focus();
+});
+document.querySelector("#cancel-fen-load").addEventListener("click", () => {
+    fenDialog.close();
+});
+fenForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    loadFen(fenInput.value);
+});
+fenDialog.addEventListener("close", scheduleComputerMove);
 copyFenButton.addEventListener("click", copyFen);
 sideChoiceInputs.forEach((input) => {
     input.addEventListener("change", () => {

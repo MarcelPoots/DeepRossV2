@@ -27,7 +27,12 @@
         <section class="game" aria-labelledby="board-heading">
             <h2 id="board-heading" class="visually-hidden">Chessboard</h2>
             <div class="game-controls">
-                <button id="reset-game" class="reset-button" type="button">Reset</button>
+                <div class="game-actions">
+                    <button id="reset-game" class="reset-button" type="button">Reset</button>
+                    <button id="open-fen-dialog" class="reset-button load-fen-button" type="button">
+                        Load from FEN
+                    </button>
+                </div>
                 <fieldset class="side-choice">
                     <legend>Who starts?</legend>
                     <label>
@@ -57,6 +62,18 @@
             <p id="promotion-heading">Choose a promotion piece</p>
             <div id="promotion-choices" class="promotion-choices"></div>
             <button class="promotion-cancel" value="cancel">Cancel</button>
+        </form>
+    </dialog>
+    <dialog id="fen-dialog" class="promotion-dialog fen-dialog" aria-labelledby="fen-heading">
+        <form id="fen-form">
+            <label id="fen-heading" for="fen-input">Load position from FEN</label>
+            <textarea id="fen-input" name="fen" rows="3" required
+                placeholder="Paste a complete FEN string"></textarea>
+            <p id="fen-error" class="fen-error" role="alert" aria-live="polite"></p>
+            <div class="fen-dialog-actions">
+                <button class="promotion-cancel" id="cancel-fen-load" type="button">Cancel</button>
+                <button class="promotion-cancel" type="submit">Load position</button>
+            </div>
         </form>
     </dialog>
     <script src="./main.js" type="module"></script>

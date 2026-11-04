@@ -115,6 +115,12 @@ h1 {
     justify-self: end;
 }
 
+.game-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
 .reset-button {
     width: 3.5rem;
     padding: 0.55rem 0.35rem;
@@ -126,6 +132,10 @@ h1 {
     font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
+}
+
+.load-fen-button {
+    width: auto;
 }
 
 .reset-button:hover {
@@ -222,6 +232,41 @@ h1 {
     cursor: pointer;
 }
 
+.fen-dialog form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.fen-dialog textarea {
+    width: min(75vw, 28rem);
+    min-height: 5rem;
+    padding: 0.6rem;
+    border: 1px solid #718b73;
+    border-radius: 0.3rem;
+    background: #24332e;
+    color: #f2f0e8;
+    font: inherit;
+    resize: vertical;
+}
+
+.fen-dialog textarea:focus-visible {
+    outline: 0.15rem solid #f4d35e;
+    outline-offset: 0.1rem;
+}
+
+.fen-error {
+    min-height: 1.25em;
+    margin: 0;
+    color: #ffb4a9;
+    font-size: 0.85rem;
+}
+
+.fen-dialog-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
 .promotion-choice {
     width: 3rem;
     height: 3rem;
@@ -293,6 +338,13 @@ h1 {
     line-height: 1;
     pointer-events: none;
     user-select: none;
+}
+
+.piece {
+    position: relative;
+    z-index: 2;
+    line-height: 1;
+    pointer-events: none;
 }
 
 .square-coordinate--rank {
@@ -384,7 +436,7 @@ h1 {
         margin-bottom: 0.75rem;
     }
 
-    .reset-button {
+    .game-actions {
         grid-column: 1;
         grid-row: 1;
     }

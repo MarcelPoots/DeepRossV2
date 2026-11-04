@@ -1,7 +1,7 @@
 # Deep Ross V2
 ![Deep Ross V2](./documentation/deeprosv2.png)
 
-A browser-based, local-first chess app, planned for human-vs-computer play.
+A browser-based, local-first chess app, for human-vs-computer play.
 
 ## Current status
 
@@ -13,7 +13,8 @@ implemented. File labels A–H and rank labels 1–8 are shown on the board. Use
 the Reset button to restore the original piece positions. The current position
 is displayed as FEN and can be copied to the clipboard. The computer opponent
 plays random legal moves at the “Random moves” difficulty. Choose whether you
-or the computer starts using the controls next to the board.
+or the computer starts using the controls next to the board. Load a saved
+position using the “Load from FEN” button.
 
 ## Run locally
 
@@ -31,7 +32,9 @@ server with Ctrl+C.
 
 - `src/index.html` — page structure and app title
 - `src/styles.css` — responsive page and chessboard styling
-- `src/main.js` — renders the board and handles UI interaction
+- `src/main.js` — coordinates game flow and handles UI interaction
+- `src/board-view.js` — renders the chessboard and FEN display
+- `src/animation.js` — animates pieces between squares for player and computer moves
 - `src/fen.js` — parses and serializes Forsyth–Edwards Notation positions
 - `src/game.js` — UI-independent game state, legal move generation, move
   application, and FEN access
