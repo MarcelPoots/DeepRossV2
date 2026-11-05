@@ -94,7 +94,9 @@ function addSlidingMoves(game, moves, from, white, directions) {
 }
 
 export function createGame(fen = STARTING_FEN) {
-    return parseFen(fen);
+    const game = parseFen(fen);
+    game.positionHistory = [getPositionKey(game)];
+    return game;
 }
 
 export function getPieceAt(game, index) {
@@ -107,6 +109,79 @@ export function getPieceAt(game, index) {
 
 export function getGameFen(game) {
     return serializeFen(game);
+}
+
+export function getPositionKey(game) {
+    // An en-passant target changes legal moves only when a legal capture exists.
+    const legalMoves = game.enPassantTarget ? generateLegalMoves(game) : [];
+    const enPassant = legalMoves.some((move) => move.enPassant)
+        ? game.enPassantTarget
+        : "-";
+    const placement = game.board.map((rank) => rank.join("")).join("/");
+    const castlingRights = [...game.castlingRights]
+        .filter((right) => right !== "-")
+        .sort()
+        .join("") || "-";
+
+    return `${placement} ${game.sideToMove} ${castlingRights} ${enPassant}`;
+}
+
+export function getDrawReason(game) {
+    if (game.halfmoveClock >= 100) {
+        return "fifty-move rule";
+    }
+
+    const history = game.positionHistory ?? [getPositionKey(game)];
+    const currentKey = history.at(-1) ?? getPositionKey(game);
+    if (history.filter((key) => key === currentKey).length >= 3) {
+        return "threefold repetition";
+    }
+
+    const nonKingPieces = game.board.flat().filter(
+        (piece) => piece && piece.toLowerCase() !== "k",
+    );
+    if (nonKingPieces.length === 0) {
+        return "insufficient material";
+    }
+    if (
+        nonKingPieces.length === 1
+        && ["b", "n"].includes(nonKingPieces[0].toLowerCase())
+    ) {
+        return "insufficient material";
+    }
+    if (nonKingPieces.every((piece) => piece.toLowerCase() === "b")) {
+        const bishopSquareColors = [];
+        for (let square = 0; square < 64; square += 1) {
+            if (getPieceAt(game, square).toLowerCase() === "b") {
+                bishopSquareColors.push(
+                    (Math.floor(square / 8) + (square % 8)) % 2,
+                );
+            }
+        }
+        if (new Set(bishopSquareColors).size === 1) {
+            return "insufficient material";
+        }
+    }
+
+    return null;
+}
+
+export function getGameOutcome(game) {
+    const legalMoves = generateLegalMoves(game);
+    if (legalMoves.length === 0) {
+        if (isKingInCheck(game)) {
+            return {
+                type: "checkmate",
+                message: `Checkmate. ${game.sideToMove === "w" ? "Black" : "White"} wins.`,
+            };
+        }
+        return { type: "stalemate", message: "Draw by stalemate." };
+    }
+
+    const drawReason = getDrawReason(game);
+    return drawReason
+        ? { type: "draw", message: `Draw by ${drawReason}.` }
+        : null;
 }
 
 export function isSquareAttacked(game, square, byWhite) {
@@ -353,7 +428,31 @@ function cloneGame(game) {
     return {
         ...game,
         board: game.board.map((rank) => [...rank]),
+        positionHistory: game.positionHistory ? [...game.positionHistory] : undefined,
     };
+}
+
+/**
+ * Copy a position and apply one of its generated legal moves without changing
+ * the original. The move must come from generateLegalMoves for this position.
+ */
+export function createGameAfterMove(game, move) {
+    const nextGame = cloneGame(game);
+    const piece = getPieceAt(nextGame, move.from);
+    const capturedPiece = move.enPassant
+        ? (piece === "P" ? "p" : "P")
+        : getPieceAt(nextGame, move.to);
+    const previousCastlingRights = nextGame.castlingRights;
+    applyUnchecked(nextGame, move);
+    const positionKey = getPositionKey(nextGame);
+    const irreversible = piece.toLowerCase() === "p"
+        || Boolean(capturedPiece)
+        || nextGame.castlingRights !== previousCastlingRights;
+    // Earlier positions cannot recur after a pawn move, capture, or lost castling right.
+    nextGame.positionHistory = irreversible
+        ? [positionKey]
+        : [...(nextGame.positionHistory ?? [getPositionKey(game)]), positionKey];
+    return nextGame;
 }
 
 export function generateLegalMoves(game) {
@@ -418,8 +517,17 @@ export function applyMove(game, from, to, promotion = null) {
     const move = candidateMoves.find((candidate) => candidate.promotion === promotion)
         ?? candidateMoves.find((candidate) => candidate.promotion === (game.sideToMove === "w" ? "Q" : "q"))
         ?? candidateMoves[0];
+    const previousCastlingRights = game.castlingRights;
     const capturedPiece = getPieceAt(game, to);
     applyUnchecked(game, move);
+    const positionKey = getPositionKey(game);
+    const irreversible = piece.toLowerCase() === "p"
+        || Boolean(capturedPiece)
+        || game.castlingRights !== previousCastlingRights;
+    // Keep only the reversible sequence needed to adjudicate threefold repetition.
+    game.positionHistory = irreversible
+        ? [positionKey]
+        : [...(game.positionHistory ?? []), positionKey];
     return { moved: true, piece, capturedPiece, promotion: move.promotion };
 }
 
@@ -434,8 +542,7 @@ export function perft(game, depth) {
     // Count reachable positions by recursively playing each move on its own copy.
     let nodes = 0;
     for (const move of generateLegalMoves(game)) {
-        const child = cloneGame(game);
-        applyUnchecked(child, move);
+        const child = createGameAfterMove(game, move);
         nodes += perft(child, depth - 1);
     }
     return nodes;

@@ -19,3 +19,83 @@ Replace desktop persistence. Support FEN import/export and browser-friendly save
 7.
 Finish with browser-level verification. Check complete games, undo/history navigation, promotion, save/load round trips, search cancellation, and responsive/accessibility behavior. Keep the mask utility out of the user-facing rewrite unless you still need it as a development tool.
 Recommended first milestone: a vanilla-JS board with a tested rules engine and full FEN support. That gives the rest of the rewrite a sound foundation and separates chess correctness from the legacy UI and search code.
+
+## Alpha-beta search plan
+
+Implement the computer opponent only after legal move generation and game
+termination rules are reliable. The current engine exports legal move
+generation and move application, but does not yet adjudicate all draw
+conditions or provide a search-oriented make/unmake API. Keep search in its own
+module and keep the rules engine independent of evaluation and UI code.
+
+Implemented so far: a negamax alpha-beta core with positional evaluation,
+capture/promotion ordering, quiescence search, principal-variation and
+killer/history move ordering, mate and draw scoring, iterative deepening,
+time/node limits, repetition history, and Web Worker integration. A
+transposition table and broader evaluation improvements remain possible future
+optimizations.
+
+### 1. Establish search prerequisites
+
+- Game-end detection covers checkmate, stalemate, the fifty-move rule, threefold
+  repetition, and common insufficient-material cases. Repetition history is
+  tracked through reversible moves and reset after an irreversible move; a FEN
+  import starts a new history because FEN contains no prior moves.
+- Define one canonical position transition for search, including promotion,
+  castling, en passant, castling rights, en-passant target, and clocks.
+- Initially search on cloned child positions to preserve correctness and avoid
+  mutating the live game. Measure this baseline before considering make/unmake;
+  if profiling shows cloning is the bottleneck, add a tested undo record that
+  restores every changed field exactly.
+- Regression tests verify that search leaves its input unchanged and that
+  checkmate, stalemate, and draw positions are scored correctly.
+
+### 2. Implement a small, testable search core
+
+- Add `src/search.js` with a pure search entry point that accepts a position,
+  maximum depth, and optional search controls, and returns a legal move, score,
+  completed depth, and node count.
+- Use negamax alpha-beta: evaluate every position from the side-to-move
+  perspective, negate the child score, and narrow the alpha/beta window on
+  return. Search terminal states before applying the depth-zero evaluation.
+- Use a finite, documented score scale. Prefer faster checkmates and avoid
+  confusing mate scores with ordinary material/evaluation scores.
+- The initial evaluator includes material, piece-square positioning, pawn
+  advancement, and bishop-pair bonuses. Quiescence search handles captures,
+  promotions, and check evasions; iterative deepening reuses the previous best
+  move and tracks killer/history moves for ordering.
+- Test against small known positions: forced mate, forced material capture,
+  stalemate, promotion choice, and a position where a shallow move is refuted
+  by the opponent. Assert the selected move is legal, root state is unchanged,
+  and node counts / scores are stable for fixed test positions.
+
+### 3. Add bounded strength and responsiveness
+
+- Iterative deepening, time/node limits, last-completed-iteration results, and
+  worker termination for cancellation are implemented. Cancellation within a
+  synchronous search iteration is immediate by terminating the worker.
+- A transposition table remains deferred until repetition-history-aware keys
+  and benchmark evidence justify the added complexity.
+
+### 4. Integrate through a Web Worker
+
+- The worker entry point receives full FEN, reversible-position history,
+  difficulty limits, and a request ID.
+- Keep the main thread as the owner of the displayed game. The worker searches
+  a separate position and returns a move in the engine's existing move shape;
+  validate/apply it on the main thread before rendering.
+- Support cancellation and stale-result rejection when the user resets or
+  loads a FEN while a search is running. Surface worker/search failures instead
+  of silently falling back to a random move.
+- The Quick, Standard, and Strong choices replace random moves; limits are
+  documented in the README.
+
+### Completion gates
+
+1. Rules and draw-condition tests pass independently of search.
+2. Search returns legal moves, correct terminal scores, and never mutates its
+   input; alpha-beta matches a simple unpruned minimax reference at small
+   depths.
+3. Iterative deepening and limits retain the last completed legal result;
+   worker termination and request/FEN checks prevent stale moves.
+4. Worker integration keeps the board responsive and surfaces search errors.

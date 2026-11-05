@@ -6,7 +6,10 @@ import {
     createGame,
     generateLegalMoves,
     getGameFen,
+    getGameOutcome,
+    getDrawReason,
     getPieceAt,
+    getPositionKey,
     isKingInCheck,
     perft,
 } from "../src/game.js";
@@ -179,4 +182,64 @@ test("generates all promotion choices and applies underpromotion", () => {
         promotion: "N",
     });
     assert.equal(getGameFen(game), "N3k3/8/8/8/8/8/8/4K3 b - - 0 1");
+});
+
+test("adjudicates fifty-move and insufficient-material draws", () => {
+    assert.equal(
+        getDrawReason(createGame("4k3/8/8/8/8/8/8/R3K3 w - - 100 51")),
+        "fifty-move rule",
+    );
+    assert.equal(
+        getDrawReason(createGame("4k3/8/8/8/8/8/8/4K3 w - - 0 1")),
+        "insufficient material",
+    );
+    assert.equal(
+        getDrawReason(createGame("4k3/8/8/8/8/8/8/2B1K3 w - - 0 1")),
+        "insufficient material",
+    );
+    assert.equal(
+        getDrawReason(createGame("4kb2/8/8/8/8/8/8/2B1K3 w - - 0 1")),
+        "insufficient material",
+    );
+    assert.equal(
+        getDrawReason(createGame("4kb2/8/8/8/8/8/8/1B2K3 w - - 0 1")),
+        null,
+    );
+});
+
+test("tracks repeated positions and declares threefold repetition", () => {
+    const game = createGame();
+    const knightCycle = [
+        [62, 45], [6, 21], [45, 62], [21, 6],
+        [62, 45], [6, 21], [45, 62], [21, 6],
+    ];
+
+    for (const [from, to] of knightCycle) {
+        assert.equal(applyMove(game, from, to).moved, true);
+    }
+
+    assert.equal(getDrawReason(game), "threefold repetition");
+    assert.deepEqual(getGameOutcome(game), {
+        type: "draw",
+        message: "Draw by threefold repetition.",
+    });
+});
+
+test("position keys include en passant only when a legal capture exists", () => {
+    const legalEnPassant = createGame("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1");
+    const noEnPassant = createGame("4k3/8/8/3pP3/8/8/8/4K3 w - - 0 1");
+    const unavailableEnPassant = createGame("4k3/8/8/3p4/8/8/8/4K3 w - d6 0 1");
+    const noTarget = createGame("4k3/8/8/3p4/8/8/8/4K3 w - - 0 1");
+
+    assert.notEqual(getPositionKey(legalEnPassant), getPositionKey(noEnPassant));
+    assert.equal(getPositionKey(unavailableEnPassant), getPositionKey(noTarget));
+});
+
+test("checkmate takes precedence over a draw clock", () => {
+    const game = createGame("7k/6Q1/6K1/8/8/8/8/8 b - - 100 51");
+
+    assert.deepEqual(getGameOutcome(game), {
+        type: "checkmate",
+        message: "Checkmate. White wins.",
+    });
 });

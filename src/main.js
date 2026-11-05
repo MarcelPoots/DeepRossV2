@@ -7,13 +7,18 @@ import {
 } from "./components/chess-board.js";
 import {
     applyMove,
-    chooseRandomLegalMove,
     createGame,
     generateLegalMoves,
+    getGameOutcome,
     getGameFen,
     getPieceAt,
 } from "./game.js";
 
+const SEARCH_LEVELS = {
+    quick: { depth: 2, maxNodes: 20_000, timeLimitMs: 350 },
+    standard: { depth: 4, maxNodes: 120_000, timeLimitMs: 1_500 },
+    strong: { depth: 6, maxNodes: 500_000, timeLimitMs: 3_500 },
+};
 const whitePieces = new Set(["K", "Q", "R", "B", "N", "P"]);
 const board = document.querySelector("#chessboard");
 const boardNote = document.querySelector("#board-note");
@@ -28,20 +33,24 @@ const fenDialog = document.querySelector("#fen-dialog");
 const fenForm = document.querySelector("#fen-form");
 const fenInput = document.querySelector("#fen-input");
 const fenError = document.querySelector("#fen-error");
+const difficulty = document.querySelector("#difficulty");
 let game = createGame();
 let selectedSquare = null;
 let pendingPromotion = null;
 let humanSide = "w";
 let computerMoveTimeout = null;
+let computerWorker = null;
+let computerRequestId = 0;
 
 function getFen() {
     return getGameFen(game);
 }
 
 function renderBoard(focusIndex = null) {
+    const outcome = getGameOutcome(game);
     board.position = game.board;
     board.selectedSquare = selectedSquare;
-    board.interactionEnabled = game.sideToMove === humanSide;
+    board.interactionEnabled = game.sideToMove === humanSide && !outcome;
     fenDisplay.textContent = getFen();
     if (focusIndex !== null) {
         board.render(focusIndex);
@@ -66,8 +75,16 @@ function setStatus(message) {
     boardNote.textContent = message;
 }
 
-function resetGame() {
+function cancelComputerSearch() {
     window.clearTimeout(computerMoveTimeout);
+    computerMoveTimeout = null;
+    computerRequestId += 1;
+    computerWorker?.terminate();
+    computerWorker = null;
+}
+
+function resetGame() {
+    cancelComputerSearch();
     pendingPromotion = null;
     if (promotionDialog.open) {
         promotionDialog.close();
@@ -89,7 +106,7 @@ function loadFen(fen) {
     }
 
     // Replace the current game only after parsing succeeds, preserving it on invalid input.
-    window.clearTimeout(computerMoveTimeout);
+    cancelComputerSearch();
     pendingPromotion = null;
     if (promotionDialog.open) {
         promotionDialog.close();
@@ -153,10 +170,19 @@ function finishMove(from, to, promotion = null) {
     setStatus(result.promotion
         ? `Promoted pawn to ${pieceNames[result.promotion]}.`
         : `Moved ${describePiece(result.piece)} from ${squareName(from)} to ${squareName(to)}.`);
+    const outcome = getGameOutcome(game);
+    if (outcome) {
+        setStatus(outcome.message);
+    }
     return true;
 }
 
 function movePiece(from, to, promotion = null) {
+    const outcome = getGameOutcome(game);
+    if (outcome) {
+        setStatus(outcome.message);
+        return false;
+    }
     if (game.sideToMove !== humanSide) {
         setStatus("Wait for the computer to move.");
         return false;
@@ -171,6 +197,11 @@ function movePiece(from, to, promotion = null) {
 
 function scheduleComputerMove() {
     window.clearTimeout(computerMoveTimeout);
+    const outcome = getGameOutcome(game);
+    if (outcome) {
+        setStatus(outcome.message);
+        return;
+    }
     if (game.sideToMove === humanSide) {
         return;
     }
@@ -182,13 +213,68 @@ function scheduleComputerMove() {
             return;
         }
 
-        const move = chooseRandomLegalMove(game);
-        if (!move) {
-            setStatus("The game is over; the computer has no legal moves.");
+        const requestId = ++computerRequestId;
+        const positionFen = getFen();
+        let worker;
+        try {
+            worker = new Worker(new URL("./search-worker.js", import.meta.url), {
+                type: "module",
+            });
+        } catch (error) {
+            setStatus(`Could not start the computer: ${error.message}`);
             return;
         }
+        computerWorker = worker;
+        worker.addEventListener("message", (event) => {
+            const message = event.data;
+            if (
+                message.requestId !== computerRequestId
+                || worker !== computerWorker
+                || positionFen !== getFen()
+                || game.sideToMove === humanSide
+            ) {
+                return;
+            }
 
-        finishMove(move.from, move.to, move.promotion);
+            if (message.type === "progress") {
+                const { completedDepth, nodes } = message.iteration;
+                setStatus(`Computer thinking: depth ${completedDepth}, ${nodes.toLocaleString()} positions…`);
+                return;
+            }
+
+            worker.terminate();
+            computerWorker = null;
+            if (message.type === "error") {
+                setStatus(`Computer search failed: ${message.message}`);
+                return;
+            }
+
+            if (!message.result.move) {
+                setStatus("The game is over; the computer has no legal moves.");
+                return;
+            }
+
+            finishMove(
+                message.result.move.from,
+                message.result.move.to,
+                message.result.move.promotion,
+            );
+        });
+        worker.addEventListener("error", (event) => {
+            if (worker !== computerWorker || requestId !== computerRequestId) {
+                return;
+            }
+            worker.terminate();
+            computerWorker = null;
+            setStatus(`Computer worker failed: ${event.message}`);
+        });
+        worker.postMessage({
+            type: "search",
+            requestId,
+            fen: positionFen,
+            positionHistory: game.positionHistory,
+            limits: SEARCH_LEVELS[difficulty.value],
+        });
     }, 350);
 }
 
@@ -198,6 +284,11 @@ function startNewGame(side) {
 }
 
 function selectSquare(index) {
+    const outcome = getGameOutcome(game);
+    if (outcome) {
+        setStatus(outcome.message);
+        return;
+    }
     if (game.sideToMove !== humanSide) {
         return;
     }
@@ -248,7 +339,7 @@ board.addEventListener("move-cancelled", () => {
 
 resetButton.addEventListener("click", resetGame);
 openFenDialogButton.addEventListener("click", () => {
-    window.clearTimeout(computerMoveTimeout);
+    cancelComputerSearch();
     fenError.textContent = "";
     fenInput.value = getFen();
     fenDialog.showModal();
@@ -263,6 +354,10 @@ fenForm.addEventListener("submit", (event) => {
 });
 fenDialog.addEventListener("close", scheduleComputerMove);
 copyFenButton.addEventListener("click", copyFen);
+difficulty.addEventListener("change", () => {
+    cancelComputerSearch();
+    scheduleComputerMove();
+});
 sideChoiceInputs.forEach((input) => {
     input.addEventListener("change", () => {
         if (input.checked) {
