@@ -102,17 +102,90 @@ h1 {
 
 .game {
     display: grid;
-    width: min(94vw, 55rem);
-    grid-template-columns: minmax(12rem, 15rem) minmax(0, 39rem);
-    align-items: start;
+    width: min(96vw, 82rem, max(0px, calc(100dvh - 3rem)));
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+    align-items: stretch;
     gap: 0.75rem;
 }
 
-.game-controls {
+.game[data-panel-open="false"] {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+}
+
+.game-sidebar {
     grid-column: 1;
     grid-row: 1;
+    min-width: 0;
+}
+
+.game-panel-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid #718b73;
+    border-radius: 0.35rem;
+    background: #24332e;
+    color: #f2f0e8;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.game-panel-toggle:hover {
+    background: #34463e;
+}
+
+.game-panel-toggle:focus-visible {
+    outline: 0.2rem solid #f4d35e;
+    outline-offset: 0.15rem;
+}
+
+.game-panel-toggle-arrow {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.game[data-panel-open="false"] .game-panel-toggle {
+    width: 2.75rem;
+    padding-inline: 0;
+}
+
+.game[data-panel-open="false"] .game-panel-toggle-label {
+    display: none;
+}
+
+.game-controls[hidden] {
+    display: none;
+}
+
+.game-controls {
     width: 100%;
     justify-self: stretch;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid #34463e;
+    border-radius: 0.4rem;
+    background: #718b73;
+}
+
+.board-area {
+    display: grid;
+    min-width: 0;
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    align-content: start;
+}
+
+.board-area .chessboard {
+    width: 100%;
+    max-width: 100%;
 }
 
 .game-actions {
@@ -414,7 +487,6 @@ h1 {
 }
 
 .board-note {
-    grid-column: 2;
     margin: 0.8rem 0 0;
     color: #c1c9c1;
     font-size: 0.9rem;
@@ -427,9 +499,16 @@ h1 {
         align-items: start;
     }
 
-    .game-controls {
+    .game[data-panel-open="false"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .game-sidebar {
         grid-column: 1;
         grid-row: 1;
+    }
+
+    .game-controls {
         display: grid;
         width: 100%;
         justify-self: start;
@@ -474,13 +553,19 @@ h1 {
     }
 
     .chessboard {
+        grid-row: 1;
+    }
+
+    .board-area {
         grid-column: 1;
         grid-row: 2;
     }
+}
 
-    .board-note {
-        grid-column: 1;
-        grid-row: 3;
+@media (min-width: 851px) {
+    .game {
+        justify-self: start;
+        margin-left: clamp(1rem, 2vw, 2rem);
     }
 }
 

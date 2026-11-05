@@ -26,37 +26,52 @@
 
         <section class="game" aria-labelledby="board-heading">
             <h2 id="board-heading" class="visually-hidden">Chessboard</h2>
-            <div class="game-controls">
-                <div class="game-actions">
-                    <button id="reset-game" class="reset-button" type="button">Reset</button>
-                    <button id="open-fen-dialog" class="reset-button load-fen-button" type="button">
-                        Load from FEN
-                    </button>
+            <aside class="game-sidebar">
+                <button
+                    id="toggle-game-panel"
+                    class="game-panel-toggle"
+                    type="button"
+                    aria-label="Close controls"
+                    aria-expanded="true"
+                    aria-controls="game-panel-content"
+                >
+                    <span class="game-panel-toggle-label">Controls</span>
+                    <span class="game-panel-toggle-arrow" aria-hidden="true">&lt;</span>
+                </button>
+                <div id="game-panel-content" class="game-controls">
+                    <div class="game-actions">
+                        <button id="reset-game" class="reset-button" type="button">Reset</button>
+                        <button id="open-fen-dialog" class="reset-button load-fen-button" type="button">
+                            Load from FEN
+                        </button>
+                    </div>
+                    <fieldset class="side-choice">
+                        <legend>Who starts?</legend>
+                        <label>
+                            <input type="radio" name="human-side" value="w" checked>
+                            You start
+                        </label>
+                        <label>
+                            <input type="radio" name="human-side" value="b">
+                            Computer starts
+                        </label>
+                    </fieldset>
+                    <label class="difficulty-choice" for="difficulty">
+                        Difficulty
+                        <select id="difficulty">
+                            <option value="quick">Quick</option>
+                            <option value="standard" selected>Standard</option>
+                            <option value="strong">Strong</option>
+                        </select>
+                    </label>
                 </div>
-                <fieldset class="side-choice">
-                    <legend>Who starts?</legend>
-                    <label>
-                        <input type="radio" name="human-side" value="w" checked>
-                        You start
-                    </label>
-                    <label>
-                        <input type="radio" name="human-side" value="b">
-                        Computer starts
-                    </label>
-                </fieldset>
-                <label class="difficulty-choice" for="difficulty">
-                    Difficulty
-                    <select id="difficulty">
-                        <option value="quick">Quick</option>
-                        <option value="standard" selected>Standard</option>
-                        <option value="strong">Strong</option>
-                    </select>
-                </label>
+            </aside>
+            <div class="board-area">
+                <chess-board id="chessboard"></chess-board>
+                <p id="board-note" class="board-note" role="status" aria-live="polite">
+                    Drag a piece to move it, or select a piece and a legal destination.
+                </p>
             </div>
-            <chess-board id="chessboard"></chess-board>
-            <p id="board-note" class="board-note" role="status" aria-live="polite">
-                Drag a piece to move it, or select a piece and a legal destination.
-            </p>
         </section>
     </main>
     <dialog id="promotion-dialog" class="promotion-dialog" aria-labelledby="promotion-heading">

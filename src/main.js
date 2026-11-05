@@ -22,6 +22,10 @@ const SEARCH_LEVELS = {
 const whitePieces = new Set(["K", "Q", "R", "B", "N", "P"]);
 const board = document.querySelector("#chessboard");
 const boardNote = document.querySelector("#board-note");
+const gameLayout = document.querySelector(".game");
+const gamePanelToggle = document.querySelector("#toggle-game-panel");
+const gamePanelContent = document.querySelector("#game-panel-content");
+const gamePanelToggleArrow = document.querySelector(".game-panel-toggle-arrow");
 const resetButton = document.querySelector("#reset-game");
 const openFenDialogButton = document.querySelector("#open-fen-dialog");
 const copyFenButton = document.querySelector("#copy-fen");
@@ -41,6 +45,18 @@ let humanSide = "w";
 let computerMoveTimeout = null;
 let computerWorker = null;
 let computerRequestId = 0;
+
+function toggleGamePanel() {
+    const nextIsOpen = gamePanelToggle.getAttribute("aria-expanded") !== "true";
+    gamePanelToggle.setAttribute("aria-expanded", String(nextIsOpen));
+    gamePanelContent.hidden = !nextIsOpen;
+    gameLayout.dataset.panelOpen = String(nextIsOpen);
+    gamePanelToggleArrow.textContent = nextIsOpen ? "<" : ">";
+    gamePanelToggle.setAttribute(
+        "aria-label",
+        nextIsOpen ? "Close controls" : "Open controls",
+    );
+}
 
 function getFen() {
     return getGameFen(game);
@@ -338,6 +354,7 @@ board.addEventListener("move-cancelled", () => {
 });
 
 resetButton.addEventListener("click", resetGame);
+gamePanelToggle.addEventListener("click", toggleGamePanel);
 openFenDialogButton.addEventListener("click", () => {
     cancelComputerSearch();
     fenError.textContent = "";
