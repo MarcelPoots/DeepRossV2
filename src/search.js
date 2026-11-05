@@ -71,6 +71,8 @@ export function evaluatePosition(game) {
     return game.sideToMove === "w" ? score : -score;
 }
 
+// Search promising tactical moves first so alpha-beta can prune weaker branches
+// sooner; victim value rewards valuable captures, while promotion value favors upgrades.
 function moveOrderingScore(game, move) {
     const movingPiece = getPieceAt(game, move.from).toLowerCase();
     const capturedPiece = move.enPassant
@@ -90,12 +92,17 @@ function moveKey(move) {
     return `${move.from}-${move.to}-${move.promotion ?? ""}`;
 }
 
+// Quiet moves neither capture nor promote, so they can be stored as cutoff
+// heuristics without mixing them with position-specific tactical moves.
 function isQuietMove(game, move) {
     return !move.promotion
         && !move.enPassant
         && getPieceAt(game, move.to) === "";
 }
 
+// Move ordering changes search efficiency, not the set of moves or their scores.
+// The previous iteration's move, killer moves, and history scores help find
+// useful alpha-beta cutoffs early; the original index makes ties deterministic.
 function orderMoves(game, moves, ply = 0, heuristics, preferredMove = null) {
     return moves
         .map((move, index) => {
@@ -123,6 +130,8 @@ function orderMoves(game, moves, ply = 0, heuristics, preferredMove = null) {
         .map(({ move }) => move);
 }
 
+// A quiet beta-cutoff refutes the remaining moves at this node. Remember it
+// for the same search ply and increase its history score, weighted by depth.
 function recordQuietCutoff(game, move, depth, ply, heuristics) {
     if (!isQuietMove(game, move)) {
         return;
@@ -201,6 +210,9 @@ function negamax(game, depth, alpha, beta, ply, stats, limits) {
     return bestScore;
 }
 
+// Extend leaf positions through forcing captures and promotions to avoid
+// evaluating in the middle of an exchange. In check, search every evasion:
+// standing pat would incorrectly assume the checked side can pass its turn.
 function quiescence(game, alpha, beta, ply, stats, limits, remainingDepth) {
     checkSearchLimits(stats, limits);
     stats.nodes += 1;
