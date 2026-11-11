@@ -190,7 +190,7 @@ h1 {
 
 .game-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.4rem;
 }
 
@@ -272,6 +272,87 @@ h1 {
     color: #f2f0e8;
     font: inherit;
     font-weight: 400;
+}
+
+.autosave-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-top: 0.65rem;
+    color: #f2f0e8;
+    font-size: 0.8rem;
+}
+
+.autosave-choice input {
+    margin: 0.15rem 0 0;
+    accent-color: #b7c8ae;
+}
+
+.save-note {
+    margin: 0.35rem 0 0;
+    color: #ffb4a9;
+    font-size: 0.75rem;
+}
+
+.save-note:empty {
+    display: none;
+}
+
+.move-history {
+    margin-top: 0.85rem;
+}
+
+.move-history h3 {
+    margin: 0 0 0.45rem;
+    color: #b7c8ae;
+    font-size: 0.85rem;
+}
+
+.history-navigation {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.3rem;
+}
+
+.history-navigation .reset-button {
+    padding-inline: 0.15rem;
+}
+
+.move-history-list {
+    display: grid;
+    max-height: min(16rem, 35vh);
+    gap: 0.2rem;
+    overflow-y: auto;
+    margin: 0.45rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.move-history-list button {
+    width: 100%;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    background: #34463e;
+    color: #f2f0e8;
+    font: inherit;
+    font-size: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.move-history-list button:hover {
+    background: #455d50;
+}
+
+.move-history-list button[aria-current="step"] {
+    border-color: #f4d35e;
+    background: #455d50;
+}
+
+.move-history-list button:focus-visible {
+    outline: 0.15rem solid #f4d35e;
+    outline-offset: 0.1rem;
 }
 
 .promotion-dialog {
@@ -521,6 +602,10 @@ h1 {
     .game-actions {
         grid-column: 1 / -1;
         grid-row: 1;
+    }
+
+    .move-history {
+        grid-column: 1 / -1;
     }
 
     .side-choice {

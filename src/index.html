@@ -44,6 +44,9 @@
                         <button id="open-fen-dialog" class="reset-button load-fen-button" type="button">
                             Load from FEN
                         </button>
+                        <button id="download-save" class="reset-button" type="button">Download save</button>
+                        <button id="open-save" class="reset-button" type="button">Load saved game</button>
+                        <input id="save-file" type="file" accept=".json,application/json" hidden>
                     </div>
                     <fieldset class="side-choice">
                         <legend>Who starts?</legend>
@@ -64,6 +67,21 @@
                             <option value="strong">Strong</option>
                         </select>
                     </label>
+                    <label class="autosave-choice">
+                        <input id="autosave-game" type="checkbox" checked>
+                        Autosave game in this browser
+                    </label>
+                    <p id="save-note" class="save-note" role="status" aria-live="polite"></p>
+                    <section class="move-history" aria-labelledby="history-heading">
+                        <h3 id="history-heading">Move history</h3>
+                        <div class="history-navigation" aria-label="History navigation">
+                            <button id="history-start" class="reset-button" type="button" aria-label="Go to starting position" title="Starting position">|&lt;</button>
+                            <button id="history-undo" class="reset-button" type="button" aria-label="Undo turn" title="Undo turn">Undo</button>
+                            <button id="history-next" class="reset-button" type="button" aria-label="Next move" title="Next move">&gt;</button>
+                            <button id="history-latest" class="reset-button" type="button" aria-label="Go to current position" title="Current position">&gt;|</button>
+                        </div>
+                        <ol id="move-history-list" class="move-history-list" aria-label="Moves"></ol>
+                    </section>
                 </div>
             </aside>
             <div class="board-area">

@@ -16,8 +16,13 @@ uses iterative-deepening alpha-beta search in a Web Worker. Choose Quick,
 Standard, or Strong search limits and whether you or the computer starts using
 the controls next to the board. The worker reports completed search depths
 without blocking board interaction and is cancelled when a new game is started
-or a FEN position is loaded. Load a saved position using the “Load from FEN”
-button. Pieces move with a 1 second animation.
+or a FEN position is loaded. Load a position using “Load from FEN.” The move
+history can be browsed by move, and “Undo” returns to the previous human turn;
+you can continue from a browsed position to create a new variation. Download
+and load complete game saves, including move history and settings, with the
+saved-game controls. Autosave is enabled by default and stores the game and
+settings in this browser; turn it off to remove the locally stored game.
+Pieces move with a 1 second animation.
 
 The game detects checkmate, stalemate, threefold repetition, the fifty-move
 rule, and common insufficient-material draws. A FEN-loaded game starts a fresh
@@ -51,11 +56,14 @@ server with Ctrl+C.
 - `src/fen.js` — parses and serializes Forsyth–Edwards Notation positions
 - `src/game.js` — UI-independent game state, legal move generation, move
   application, and FEN access
+- `src/game-save.js` — validates versioned save files by replaying their legal
+  moves and restores the position timeline
 - `src/search.js` — positional evaluation, quiescence, and iterative-deepening
   alpha-beta search with move-ordering heuristics and time/node limits
 - `src/search-worker.js` — worker entry point for computer search
 - `test/fen.test.js` — FEN parsing and serialization tests
 - `test/game.test.js` — game state and move application tests
+- `test/game-save.test.js` — save-file round-trip and validation tests
 - `test/search.test.js` — search correctness, limits, and terminal-score tests
 
 ## Run tests
@@ -66,9 +74,16 @@ Run the chess-logic unit tests with Node.js:
 npm test
 ```
 
-## Planned direction
+## Project documentation
 
-The first milestone is a vanilla JavaScript chessboard backed by a tested rules
-engine with full FEN support. The initial game scope is one human playing
-against the computer; network play and other modes are not planned for this
-version. See [DeepRossV2_plan.md](./DeepRossV2_plan.md) for the broader roadmap.
+- [Architecture guide](./architecture.md) — a plain-language explanation of
+  the app's modules and how moves, computer search, history, and saves work
+- [Implementation plan](./DeepRossV2_plan.md) — original migration notes and
+  chess search design details
+
+## Scope
+
+The current project is a local-first game for one human against the computer.
+Its rules engine, FEN import/export, move history, browser save/load, autosave,
+and Web Worker opponent are implemented. Network play, other player modes,
+`.MPC` importing, and the mask utility are outside this version's scope.
