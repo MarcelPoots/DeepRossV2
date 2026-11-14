@@ -9,7 +9,7 @@ const SAVE_FORMAT = "deep-ross-save";
 const SAVE_VERSION = 1;
 const MAX_SAVE_LENGTH = 2_000_000;
 const MAX_TIMELINE_LENGTH = 10_000;
-const DIFFICULTIES = new Set(["quick", "standard", "strong"]);
+const DIFFICULTIES = new Set(["quick", "standard", "strong", "ultrastrong"]);
 
 /**
  * Validate and restore a versioned save by replaying every move from its root.

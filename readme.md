@@ -28,10 +28,12 @@ The game detects checkmate, stalemate, threefold repetition, the fifty-move
 rule, and common insufficient-material draws. A FEN-loaded game starts a fresh
 repetition history because FEN does not include prior moves.
 
-Search limits are capped at depth 2 / 350 ms / 20,000 nodes (Quick), depth 4 /
-1,500 ms / 120,000 nodes (Standard), and depth 6 / 3,500 ms / 500,000 nodes
-(Strong). The first limit reached ends the search iteration and preserves the
-best move from the most recently completed depth.
+Choose Quick, Standard, Strong, or Ultra Strong for the computer's search
+limits. The caps are depth 2 / 350 ms / 20,000 nodes (Quick), depth 4 /
+1,500 ms / 120,000 nodes (Standard), depth 6 / 3,500 ms / 500,000 nodes
+(Strong), and depth 8 / 10,000 ms / 1,000,000 nodes (Ultra Strong). The first
+limit reached ends the search iteration and preserves the best move from the
+most recently completed depth.
 
 ## Run locally
 

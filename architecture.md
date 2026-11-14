@@ -130,6 +130,7 @@ The difficulty presets are:
 | Quick | 2 | 350 ms | 20,000 |
 | Standard | 4 | 1,500 ms | 120,000 |
 | Strong | 6 | 3,500 ms | 500,000 |
+| Ultra Strong | 8 | 10,000 ms | 1,000,000 |
 
 These are maximum limits, not guaranteed search depths: the first limit
 reached stops the search. If a deeper iteration is interrupted, the worker

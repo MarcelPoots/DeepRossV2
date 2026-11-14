@@ -98,7 +98,8 @@ optional future optimizations.
   the main thread validates and applies it before rendering.
 - Cancellation and stale-result rejection protect resets, position loads, and
   history navigation. Worker and search failures are surfaced to the player.
-- Quick, Standard, and Strong choices use documented search limits.
+- Quick, Standard, Strong, and Ultra Strong choices use documented search
+  limits.
 
 ### Completion gates
 

@@ -20,6 +20,7 @@ const SEARCH_LEVELS = {
     quick: { depth: 2, maxNodes: 20_000, timeLimitMs: 350 },
     standard: { depth: 4, maxNodes: 120_000, timeLimitMs: 1_500 },
     strong: { depth: 6, maxNodes: 500_000, timeLimitMs: 3_500 },
+    ultrastrong: { depth: 8, maxNodes: 1_000_000, timeLimitMs: 10_000 },
 };
 const board = document.querySelector("#chessboard");
 const boardNote = document.querySelector("#board-note");

@@ -39,6 +39,17 @@ test("saves and restores a replayable game history and settings", () => {
     assert.equal(saved.timeline[2].positionHistory.length, 3);
 });
 
+test("saves and restores the Ultra Strong difficulty setting", () => {
+    const saved = parseGameSave(serializeGameSave({
+        timeline: makeTimeline(),
+        currentIndex: 0,
+        humanSide: "w",
+        difficulty: "ultrastrong",
+    }));
+
+    assert.equal(saved.difficulty, "ultrastrong");
+});
+
 test("rejects malformed, unsupported, or illegal game saves", () => {
     assert.throws(() => parseGameSave("{"), /valid JSON/);
     assert.throws(() => parseGameSave(JSON.stringify({
