@@ -117,6 +117,12 @@ features, and searches tactical continuations such as captures and promotions.
 Iterative deepening completes one depth at a time; the search limits stop work
 when the chosen depth, time, or node budget is reached.
 
+FEN is used to send the root position to the worker, where it is parsed once
+into the game's normal state representation. Alpha-beta search then creates
+child positions by copying that state and applying moves; it does not serialize
+each searched position to FEN. Evaluation reads the position state directly.
+Repetition checks use a compact position key, not full FEN.
+
 The difficulty presets are:
 
 | Level | Maximum depth | Time limit | Node limit |
