@@ -5,6 +5,7 @@ import {
     getPieceAt,
     isKingInCheck,
 } from "./game.js";
+import { isWhitePiece } from "./pieces.js";
 
 const PIECE_VALUES = {
     p: 100,
@@ -17,10 +18,6 @@ const PIECE_VALUES = {
 const MATE_SCORE = 100_000;
 
 class SearchStopped extends Error {}
-
-function isWhitePiece(piece) {
-    return piece === piece.toUpperCase();
-}
 
 export function evaluatePosition(game) {
     // Modest square bonuses reward development/center control without eclipsing material.

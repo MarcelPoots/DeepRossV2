@@ -5,6 +5,7 @@ import {
     pieceSymbols,
     squareName,
 } from "./components/chess-board.js";
+import { isWhitePiece } from "./pieces.js";
 import {
     applyMove,
     createGame,
@@ -20,7 +21,6 @@ const SEARCH_LEVELS = {
     standard: { depth: 4, maxNodes: 120_000, timeLimitMs: 1_500 },
     strong: { depth: 6, maxNodes: 500_000, timeLimitMs: 3_500 },
 };
-const whitePieces = new Set(["K", "Q", "R", "B", "N", "P"]);
 const board = document.querySelector("#chessboard");
 const boardNote = document.querySelector("#board-note");
 const gameLayout = document.querySelector(".game");
@@ -530,7 +530,7 @@ function selectSquare(index) {
     if (selectedSquare === null || selectedSquare === index) {
         selectedSquare = selectedSquare === index
             ? null
-            : piece && whitePieces.has(piece) === (humanSide === "w")
+            : piece && isWhitePiece(piece) === (humanSide === "w")
                 ? index
                 : null;
         renderBoard(index);
@@ -546,7 +546,7 @@ function selectSquare(index) {
 
     const selectedPiece = getPieceAt(game, selectedSquare);
 
-    if (piece && whitePieces.has(piece) === whitePieces.has(selectedPiece)) {
+    if (piece && isWhitePiece(piece) === isWhitePiece(selectedPiece)) {
         selectedSquare = index;
         renderBoard(index);
         setStatus(`Selected ${describePiece(piece)} on ${squareName(index)}.`);

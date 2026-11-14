@@ -1,4 +1,5 @@
 import { parseFen, serializeFen } from "./fen.js";
+import { isWhitePiece } from "./pieces.js";
 
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const PROMOTIONS = {
@@ -21,10 +22,6 @@ const KING_STEPS = [
 ];
 const BISHOP_DIRECTIONS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
 const ROOK_DIRECTIONS = [[-1, 0], [0, -1], [0, 1], [1, 0]];
-
-function isWhitePiece(piece) {
-    return piece !== "" && piece === piece.toUpperCase();
-}
 
 function isEnemyPiece(piece, white) {
     return piece !== "" && isWhitePiece(piece) !== white;

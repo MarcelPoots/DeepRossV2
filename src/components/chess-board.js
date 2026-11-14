@@ -1,3 +1,5 @@
+import { isWhitePiece } from "../pieces.js";
+
 export const pieceNames = {
     K: "king",
     Q: "queen",
@@ -28,8 +30,7 @@ export const pieceSymbols = {
     p: "♟",
 };
 
-const whitePieces = new Set(["K", "Q", "R", "B", "N", "P"]);
-
+// Character code 97 is lowercase "a", the first file in chess notation.
 export function squareName(index) {
     const row = Math.floor(index / 8);
     const column = index % 8;
@@ -37,7 +38,7 @@ export function squareName(index) {
 }
 
 export function describePiece(piece) {
-    return `${whitePieces.has(piece) ? "White" : "Black"} ${pieceNames[piece]}`;
+    return `${isWhitePiece(piece) ? "White" : "Black"} ${pieceNames[piece]}`;
 }
 
 class ChessBoard extends HTMLElement {
