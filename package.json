@@ -16,6 +16,10 @@
   "main": "index.html",
   "scripts": {
     "start": "python3 -m http.server 8000 --directory src",
+    "build": "vite build",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "vite": "^8.3.8"
   }
 }

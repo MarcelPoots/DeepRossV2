@@ -47,6 +47,30 @@ npm start
 Open [http://localhost:8000](http://localhost:8000) in your browser. Stop the
 server with Ctrl+C.
 
+## Build and deploy
+
+The production build uses Vite to bundle and minify the JavaScript and CSS and
+to prepare the HTML and Web Worker. Minification is the normal choice for a
+static website: it reduces download size, but it does not hide the source or
+protect secrets. JavaScript sent to a browser can always be inspected, so do
+not put passwords, API keys, or other private data in the app. Obfuscation is
+not needed for deployment.
+
+Install the build dependency and create the production files:
+
+```sh
+npm install
+npm run build
+```
+
+Upload the **contents** of the generated `dist/` folder to your host's website
+document root using FileZilla (often named `public_html` or `www`). Keep the
+generated files and folders together, including `index.html`, `assets/`, and
+the bundled computer-search worker. Do not upload the development `src/`
+folder instead. The build uses relative asset paths, so it can also work when
+the app is served from a subfolder. Re-run `npm run build` after making
+changes, then upload the refreshed `dist/` contents.
+
 ## Project files
 
 - `src/index.html` — page structure and app title
