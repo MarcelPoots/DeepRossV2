@@ -3,6 +3,8 @@
 
 A browser-based, local-first chess app, for human-vs-computer play.
 
+See working version on https://deep-ross.freehosting.dev/
+
 ## Current status
 
 The current version displays the standard chess starting position and supports
